@@ -1,0 +1,41 @@
+name: Backend
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements-dev.txt
+
+      - name: Ruff check
+        run: ruff check backend
+
+      - name: Ruff format check
+        run: ruff format --check backend
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: sqlite+pysqlite:///:memory:
+          API_KEY_ENABLED: "false"
+          SUMMARY_EMAIL_ENABLED: "false"
+          SUMMARY_SCHEDULE_ENABLED: "false"
+          REDIS_URL: ""
+        run: pytest

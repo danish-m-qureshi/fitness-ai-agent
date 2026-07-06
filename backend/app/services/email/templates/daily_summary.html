@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <body style="font-family: Arial, sans-serif; color: #18212f; line-height: 1.5;">
+    <h1 style="font-size: 22px;">Daily Fitness Summary</h1>
+    <p>Hi {{ name }}, here is your summary for {{ summary_date }}.</p>
+    <p>{{ summary_text }}</p>
+    <table cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
+      <tr><td><strong>Calories</strong></td><td>{{ total_calories }}</td></tr>
+      <tr><td><strong>Calories remaining</strong></td><td>{{ calories_remaining }}</td></tr>
+      <tr><td><strong>Protein</strong></td><td>{{ total_protein_g }}g</td></tr>
+      <tr><td><strong>Workouts</strong></td><td>{{ workouts_completed }}</td></tr>
+      <tr><td><strong>Latest weight</strong></td><td>{{ latest_weight_kg }}kg</td></tr>
+    </table>
+    <p>{{ coaching_suggestions }}</p>
+  </body>
+</html>

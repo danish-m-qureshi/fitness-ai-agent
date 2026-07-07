@@ -6,6 +6,7 @@ from app.models.goal import Goal
 from app.models.meal import Meal
 from app.models.meal_food_item import MealFoodItem
 from app.models.nutrition_food import NutritionFood
+from app.models.processed_whatsapp_message import ProcessedWhatsAppMessage
 from app.models.user import User
 from app.models.workout import Workout
 from app.models.workout_exercise import WorkoutExercise
@@ -20,6 +21,7 @@ __all__ = [
     "Meal",
     "MealFoodItem",
     "NutritionFood",
+    "ProcessedWhatsAppMessage",
     "User",
     "Workout",
     "WorkoutExercise",

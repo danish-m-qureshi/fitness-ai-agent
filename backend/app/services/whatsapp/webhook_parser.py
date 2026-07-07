@@ -30,6 +30,7 @@ class WhatsAppWebhookParser:
             image_id=payload.image_id,
             image_url=payload.image_url,
             image_path=payload.image_path,
+            whatsapp_message_id=payload.whatsapp_message_id or payload.message_id,
             raw_payload=raw_payload,
         )
 
@@ -59,6 +60,7 @@ class WhatsAppWebhookParser:
 
         sender = message.get("from")
         message_type = message.get("type", "unknown")
+        whatsapp_message_id = message.get("id")
         text = None
         image_id = None
 
@@ -77,6 +79,9 @@ class WhatsAppWebhookParser:
             message_type=message_type,
             text=text,
             image_id=image_id,
+            whatsapp_message_id=(
+                whatsapp_message_id if isinstance(whatsapp_message_id, str) else None
+            ),
             raw_payload=raw_payload,
         )
 

@@ -27,6 +27,8 @@ class WhatsAppWebhookPayload(BaseModel):
     image_url: str | None = None
     image_id: str | None = None
     image_path: str | None = None
+    message_id: str | None = None
+    whatsapp_message_id: str | None = None
 
 
 class IncomingWhatsAppMessage(BaseModel):
@@ -37,6 +39,7 @@ class IncomingWhatsAppMessage(BaseModel):
     image_id: str | None = None
     image_url: str | None = None
     image_path: str | None = None
+    whatsapp_message_id: str | None = None
     raw_payload: dict[str, Any] = Field(default_factory=dict)
 
 

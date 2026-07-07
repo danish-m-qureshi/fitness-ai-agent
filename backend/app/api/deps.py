@@ -21,6 +21,9 @@ from app.services.vision.image_storage import ImageStorageService
 from app.services.vision.meal_image_analyzer import MealImageAnalyzer
 from app.services.whatsapp.provider_base import WhatsAppProvider
 from app.services.whatsapp.media_downloader import WhatsAppMediaDownloader
+from app.services.whatsapp.processed_message_service import (
+    ProcessedWhatsAppMessageService,
+)
 from app.services.whatsapp.providers.meta_provider import MetaWhatsAppProvider
 from app.services.whatsapp.providers.mock_provider import MockWhatsAppProvider
 from app.services.whatsapp.whatsapp_service import WhatsAppService
@@ -162,6 +165,12 @@ def get_whatsapp_media_downloader(
     )
 
 
+def get_processed_whatsapp_message_service(
+    db: Session = Depends(get_db),
+) -> ProcessedWhatsAppMessageService:
+    return ProcessedWhatsAppMessageService(db)
+
+
 def get_vision_llm_client(
     settings: Settings = Depends(get_settings),
 ) -> VisionLLMClient:
@@ -220,10 +229,14 @@ def get_whatsapp_service(
     agent: FitnessAgent = Depends(get_fitness_agent),
     user_service: UserService = Depends(get_user_service),
     media_downloader: WhatsAppMediaDownloader = Depends(get_whatsapp_media_downloader),
+    processed_message_service: ProcessedWhatsAppMessageService = Depends(
+        get_processed_whatsapp_message_service
+    ),
 ) -> WhatsAppService:
     return WhatsAppService(
         provider=whatsapp_provider,
         agent=agent,
         user_service=user_service,
         media_downloader=media_downloader,
+        processed_message_service=processed_message_service,
     )

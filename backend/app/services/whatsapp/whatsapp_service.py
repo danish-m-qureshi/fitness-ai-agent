@@ -4,9 +4,16 @@ from app.agents.fitness_agent import FitnessAgent
 from app.core.exceptions import AppException
 from app.core.middleware import request_id_context
 from app.schemas.agent import AgentRequest
-from app.schemas.whatsapp import WhatsAppWebhookPayload, WhatsAppWebhookResponse
+from app.schemas.whatsapp import (
+    IncomingWhatsAppMessage,
+    WhatsAppWebhookPayload,
+    WhatsAppWebhookResponse,
+)
 from app.services.user_service import UserService
 from app.services.whatsapp.media_downloader import WhatsAppMediaDownloader
+from app.services.whatsapp.processed_message_service import (
+    ProcessedWhatsAppMessageService,
+)
 from app.services.whatsapp.provider_base import WhatsAppProvider
 from app.services.whatsapp.webhook_parser import WhatsAppWebhookParser
 
@@ -30,11 +37,13 @@ class WhatsAppService:
         agent: FitnessAgent,
         user_service: UserService,
         media_downloader: WhatsAppMediaDownloader | None = None,
+        processed_message_service: ProcessedWhatsAppMessageService | None = None,
     ) -> None:
         self.provider = provider
         self.agent = agent
         self.user_service = user_service
         self.media_downloader = media_downloader
+        self.processed_message_service = processed_message_service
         self.parser = WhatsAppWebhookParser()
 
     async def handle_webhook(
@@ -48,6 +57,20 @@ class WhatsAppService:
                 provider=self.provider.name,
                 intent="unknown",
                 sender=incoming.sender or None,
+            )
+
+        if not self._reserve_message(incoming):
+            logger.info(
+                "Duplicate WhatsApp webhook ignored request_id=%s whatsapp_message_id=%s sender=%s",
+                request_id_context.get(),
+                incoming.whatsapp_message_id,
+                incoming.sender,
+            )
+            return WhatsAppWebhookResponse(
+                status="ignored",
+                provider=self.provider.name,
+                intent="unknown",
+                sender=incoming.sender,
             )
 
         user_id = self._resolve_user_id(
@@ -123,6 +146,16 @@ class WhatsAppService:
 
         user = self.user_service.get_user_by_phone_number(sender)
         return user.id if user is not None else None
+
+    def _reserve_message(self, incoming: IncomingWhatsAppMessage) -> bool:
+        if self.processed_message_service is None:
+            return True
+
+        return self.processed_message_service.reserve_message(
+            whatsapp_message_id=incoming.whatsapp_message_id,
+            sender_phone_number=incoming.sender,
+            message_type=incoming.message_type,
+        )
 
     async def _download_media_if_needed(
         self,

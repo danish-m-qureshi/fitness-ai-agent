@@ -11,7 +11,23 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 import app.models  # noqa: E402,F401
+from app.core.config import get_settings  # noqa: E402
 from app.db.base import Base  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def isolate_test_settings(
+    monkeypatch: pytest.MonkeyPatch,
+) -> Generator[None, None, None]:
+    monkeypatch.setenv("API_KEY_ENABLED", "false")
+    monkeypatch.setenv("DEBUG", "true")
+    monkeypatch.setenv("DOCS_ENABLED", "true")
+    get_settings.cache_clear()
+
+    try:
+        yield
+    finally:
+        get_settings.cache_clear()
 
 
 @pytest.fixture()

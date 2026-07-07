@@ -20,6 +20,7 @@ def debug_config(
     return DebugConfigResponse(
         environment=settings.environment,
         debug=settings.debug,
+        docs_enabled=settings.docs_enabled,
         api_prefix=settings.api_v1_prefix,
         api_key_enabled=settings.api_key_enabled,
         database={

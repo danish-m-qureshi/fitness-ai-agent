@@ -42,6 +42,14 @@ class WhatsAppService:
         payload: WhatsAppWebhookPayload,
     ) -> WhatsAppWebhookResponse:
         incoming = self.parser.parse(payload)
+        if self._is_ignored_message_type(incoming.message_type):
+            return WhatsAppWebhookResponse(
+                status="ignored",
+                provider=self.provider.name,
+                intent="unknown",
+                sender=incoming.sender or None,
+            )
+
         user_id = self._resolve_user_id(
             local_user_id=incoming.user_id,
             sender=incoming.sender,
@@ -77,8 +85,19 @@ class WhatsAppService:
         )
         reply = agent_response.response_text
 
-        if incoming.sender and reply:
-            await self.provider.send_text(incoming.sender, reply)
+        reply_send_error = await self._send_text_safely(
+            sender=incoming.sender,
+            reply=reply,
+            context="agent_reply",
+        )
+        response_error = "; ".join(agent_response.errors) or None
+        response_error_code = None
+        if reply_send_error is not None:
+            response_error = self._combined_error(
+                response_error,
+                "WhatsApp reply could not be sent.",
+            )
+            response_error_code = "whatsapp_reply_send_failed"
 
         return WhatsAppWebhookResponse(
             status="received",
@@ -90,7 +109,8 @@ class WhatsAppService:
             workout_id=agent_response.workout_id,
             weight_log_id=agent_response.weight_log_id,
             daily_summary_id=agent_response.daily_summary_id,
-            error="; ".join(agent_response.errors) or None,
+            error=response_error,
+            error_code=response_error_code,
         )
 
     def _resolve_user_id(
@@ -154,8 +174,11 @@ class WhatsAppService:
         error: str,
         error_code: str,
     ) -> WhatsAppWebhookResponse:
-        if sender and reply:
-            await self.provider.send_text(sender, reply)
+        await self._send_text_safely(
+            sender=sender,
+            reply=reply,
+            context="error_reply",
+        )
 
         return WhatsAppWebhookResponse(
             status="received",
@@ -166,6 +189,48 @@ class WhatsAppService:
             error=error,
             error_code=error_code,
         )
+
+    async def _send_text_safely(
+        self,
+        sender: str | None,
+        reply: str | None,
+        context: str,
+    ) -> AppException | Exception | None:
+        if not sender or not reply:
+            return None
+
+        try:
+            await self.provider.send_text(sender, reply)
+        except AppException as exc:
+            logger.warning(
+                "WhatsApp reply send failed request_id=%s provider=%s context=%s error_code=%s reason=%s",
+                request_id_context.get(),
+                self.provider.name,
+                context,
+                exc.error_code,
+                exc.message,
+            )
+            return exc
+        except Exception as exc:
+            logger.exception(
+                "Unexpected WhatsApp reply send failure request_id=%s provider=%s context=%s",
+                request_id_context.get(),
+                self.provider.name,
+                context,
+            )
+            return exc
+
+        return None
+
+    def _combined_error(
+        self,
+        existing_error: str | None,
+        new_error: str,
+    ) -> str:
+        if existing_error:
+            return f"{existing_error}; {new_error}"
+
+        return new_error
 
     def _media_failure_reply(self, exc: AppException) -> str:
         if exc.error_code == "whatsapp_media_too_large":
@@ -178,3 +243,6 @@ class WhatsAppService:
 
     def _is_image_message(self, message_type: str) -> bool:
         return message_type.lower().strip() == "image"
+
+    def _is_ignored_message_type(self, message_type: str) -> bool:
+        return message_type.lower().strip() == "status"

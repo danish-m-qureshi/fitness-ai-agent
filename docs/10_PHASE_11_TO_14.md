@@ -13,16 +13,15 @@
 - `GET /api/v1/users/{user_id}/profile` returns profile data.
 - `PATCH /api/v1/users/{user_id}/profile` updates profile-only fields.
 - API-key auth is controlled by `API_KEY_ENABLED` and `API_KEY`.
-- When enabled, send `X-API-Key: <key>` for non-public endpoints.
+- When enabled, send `X-API-Key: <key>` for non-webhook endpoints.
 
-Public endpoints:
+Phase 19 tightened the public endpoint list for Cloudflare exposure. With
+`API_KEY_ENABLED=true`, only this endpoint is public:
 
-- `/`
-- `/docs`
-- `/openapi.json`
-- `/api/v1/health*`
-- `/api/v1/status`
 - `/api/v1/webhooks/whatsapp`
+
+All other routes, including `/`, `/api/v1/health`, `/api/v1/status`, `/docs`,
+and `/openapi.json`, require `X-API-Key` unless API-key auth is disabled.
 
 ## Phase 13: Production Hardening
 

@@ -89,19 +89,8 @@ class RequestContextAndAuthMiddleware(BaseHTTPMiddleware):
         )
 
     def _is_public_path(self, path: str) -> bool:
-        exact_public_paths = {
-            "/",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            f"{self.settings.api_v1_prefix}/status",
-        }
-        public_prefixes = (
-            f"{self.settings.api_v1_prefix}/health",
-            f"{self.settings.api_v1_prefix}/webhooks/whatsapp",
-            "/docs/",
-            "/redoc/",
-        )
-        return path in exact_public_paths or any(
+        webhook_path = f"{self.settings.api_v1_prefix}/webhooks/whatsapp"
+        public_prefixes = (f"{webhook_path}/",)
+        return path == webhook_path or any(
             path.startswith(prefix) for prefix in public_prefixes
         )

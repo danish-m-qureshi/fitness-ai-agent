@@ -79,11 +79,9 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: fitness_ai_cloudflared
     restart: unless-stopped
-    profiles:
-      - tunnel
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
     command:
       - tunnel
       - --no-autoupdate

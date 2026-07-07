@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class DebugConfigResponse(BaseModel):
     environment: str
     debug: bool
+    docs_enabled: bool
     api_prefix: str
     api_key_enabled: bool
     database: dict[str, Any] = Field(default_factory=dict)

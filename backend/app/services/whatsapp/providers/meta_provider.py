@@ -1,3 +1,6 @@
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
 import httpx
 from app.core.exceptions import AppException
 from app.services.whatsapp.provider_base import WhatsAppProvider
@@ -12,11 +15,15 @@ class MetaWhatsAppProvider(WhatsAppProvider):
         phone_number_id: str | None,
         api_base_url: str,
         api_version: str,
+        http_client: httpx.AsyncClient | None = None,
+        timeout_seconds: float = 15.0,
     ) -> None:
         self.access_token = access_token
         self.phone_number_id = phone_number_id
         self.api_base_url = api_base_url.rstrip("/")
         self.api_version = api_version.strip("/")
+        self.http_client = http_client
+        self.timeout_seconds = timeout_seconds
 
     async def send_text(self, to: str, message: str) -> None:
         self._ensure_configured()
@@ -50,7 +57,7 @@ class MetaWhatsAppProvider(WhatsAppProvider):
         headers = {"Authorization": f"Bearer {self.access_token}"}
 
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with self._client_context() as client:
                 response = await client.post(url, headers=headers, json=payload)
                 response.raise_for_status()
         except httpx.HTTPError as exc:
@@ -67,3 +74,12 @@ class MetaWhatsAppProvider(WhatsAppProvider):
                 status_code=500,
                 error_code="whatsapp_meta_not_configured",
             )
+
+    @asynccontextmanager
+    async def _client_context(self) -> AsyncIterator[httpx.AsyncClient]:
+        if self.http_client is not None:
+            yield self.http_client
+            return
+
+        async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+            yield client

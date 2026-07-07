@@ -24,6 +24,6 @@ RUN mkdir -p /app/storage \
 
 USER app
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)" || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD python -c "import os, urllib.request; req=urllib.request.Request('http://127.0.0.1:8000/api/v1/health'); enabled=os.getenv('API_KEY_ENABLED', '').lower() in {'1', 'true', 'yes', 'on'}; key=os.getenv('API_KEY'); req.add_header('X-API-Key', key) if enabled and key else None; urllib.request.urlopen(req, timeout=3)" || exit 1
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

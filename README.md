@@ -47,16 +47,39 @@ Ollama runtime.
 
 ## Cloudflare Tunnel
 
-Cloudflare Tunnel is wired as an optional Compose profile. Keep the tunnel token
-out of Git and provide it at runtime:
+Cloudflare Tunnel is part of the default Compose stack. Keep the tunnel token
+out of Git in the ignored root `.env` file:
+
+```env
+CLOUDFLARE_TUNNEL_TOKEN=<cloudflare-tunnel-token>
+```
+
+Before public exposure, use:
+
+```env
+DEBUG=false
+DOCS_ENABLED=false
+API_KEY_ENABLED=true
+API_KEY=<strong-random-api-key>
+WHATSAPP_PROVIDER=meta
+WHATSAPP_META_VERIFY_TOKEN=<meta-webhook-verify-token>
+```
+
+Then start the stack:
 
 ```bash
-export CLOUDFLARE_TUNNEL_TOKEN="your-token"
-docker compose --profile tunnel up -d cloudflared
+docker compose up -d --build
 ```
 
 The tunnel should point to the backend service at `http://backend:8000` in the
-Cloudflare dashboard.
+Cloudflare dashboard. Use this Meta callback URL:
+
+```text
+https://<your-cloudflare-hostname>/api/v1/webhooks/whatsapp
+```
+
+When `API_KEY_ENABLED=true`, only the WhatsApp webhook path is public. All other
+routes require `X-API-Key`.
 
 ## Backups
 

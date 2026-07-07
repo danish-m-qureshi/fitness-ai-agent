@@ -43,6 +43,16 @@ class WhatsAppWebhookParser:
 
         try:
             value = entries[0]["changes"][0]["value"]
+        except (KeyError, IndexError, TypeError):
+            return None
+        if not isinstance(value, dict):
+            return None
+
+        status_message = self._parse_meta_status_payload(value, raw_payload)
+        if status_message is not None:
+            return status_message
+
+        try:
             message = value["messages"][0]
         except (KeyError, IndexError, TypeError):
             return None
@@ -67,5 +77,28 @@ class WhatsAppWebhookParser:
             message_type=message_type,
             text=text,
             image_id=image_id,
+            raw_payload=raw_payload,
+        )
+
+    def _parse_meta_status_payload(
+        self,
+        value: dict,
+        raw_payload: dict,
+    ) -> IncomingWhatsAppMessage | None:
+        statuses = value.get("statuses")
+        if not isinstance(statuses, list) or not statuses:
+            return None
+
+        status = statuses[0]
+        if not isinstance(status, dict):
+            return None
+
+        sender = status.get("recipient_id")
+        if not isinstance(sender, str):
+            sender = ""
+
+        return IncomingWhatsAppMessage(
+            sender=sender,
+            message_type="status",
             raw_payload=raw_payload,
         )

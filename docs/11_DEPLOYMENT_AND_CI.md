@@ -9,7 +9,7 @@ The Compose stack now includes persistent services for:
 - `qdrant`
 - `backend`
 - optional `ollama` with the `local-llm` profile
-- optional `cloudflared` with the `tunnel` profile
+- `cloudflared` for the Cloudflare Tunnel
 
 Persistent volumes:
 
@@ -19,11 +19,10 @@ Persistent volumes:
 - `ollama_data`
 
 Cloudflare Tunnel uses `CLOUDFLARE_TUNNEL_TOKEN` at runtime. Do not commit the
-actual token. Start it with:
+actual token. Store it in the ignored root `.env` file and start the stack with:
 
 ```bash
-export CLOUDFLARE_TUNNEL_TOKEN="your-token"
-docker compose --profile tunnel up -d cloudflared
+docker compose up -d --build
 ```
 
 PostgreSQL backup scripts:

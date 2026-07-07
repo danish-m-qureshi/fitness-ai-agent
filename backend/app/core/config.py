@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     environment: str = "development"
     debug: bool = True
+    docs_enabled: bool = True
     api_v1_prefix: str = "/api/v1"
     log_level: str = "INFO"
     database_url: str = (
@@ -28,6 +29,7 @@ class Settings(BaseSettings):
     whatsapp_provider: str = "mock"
     whatsapp_meta_access_token: str | None = None
     whatsapp_meta_phone_number_id: str | None = None
+    whatsapp_meta_verify_token: str | None = None
     whatsapp_meta_api_base_url: str = "https://graph.facebook.com"
     whatsapp_meta_api_version: str = "v20.0"
     smtp_host: str | None = None

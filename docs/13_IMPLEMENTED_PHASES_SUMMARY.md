@@ -644,12 +644,14 @@ Persistent volumes:
 - `qdrant_data`
 - `ollama_data`
 
-Cloudflare Tunnel command pattern:
+Cloudflare Tunnel startup pattern:
 
 ```bash
-export CLOUDFLARE_TUNNEL_TOKEN="your-token"
-docker compose --profile tunnel up -d cloudflared
+docker compose up -d --build
 ```
+
+The tunnel token lives in the ignored root `.env` file as
+`CLOUDFLARE_TUNNEL_TOKEN`.
 
 ## Phase 16: Testing and CI
 
